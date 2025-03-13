@@ -1,7 +1,7 @@
 
 
 const bookingStatus ={
-    BO0KED:'booked',
+    BOOKED:'booked',
     CANCELLED:'cancelled',
     PENDING:'pending',
     INITIATED:'initiated'

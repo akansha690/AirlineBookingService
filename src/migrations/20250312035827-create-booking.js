@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 
 const {enums} = require("../utils/index.js");
-const {BO0KED, CANCELLED, PENDING, INITIATED}= enums.bookingStatus
+const {BOOKED, CANCELLED, PENDING, INITIATED}= enums.bookingStatus
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -23,7 +23,7 @@ module.exports = {
       },
       status: {
         type: Sequelize.ENUM,
-        values: [BO0KED, CANCELLED, PENDING, INITIATED],
+        values: [BOOKED, CANCELLED, PENDING, INITIATED],
         defaultValue :INITIATED,
         allowNull:false
       },
