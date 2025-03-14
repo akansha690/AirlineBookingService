@@ -51,7 +51,7 @@ async function makePayment(data){
         const bookingTime = new Date(bookingDetails.createdAt);
         const currentTime = new Date();
         if(currentTime-bookingTime > 600000){
-            await bookingRepository.update_booking(data.bookingId, {status:CANCELLED}, transaction);
+            await cancelBooking(data);
             throw new ApiError("Time is up! Booking has expired", StatusCodes.BAD_REQUEST);
         }
 
@@ -67,8 +67,44 @@ async function makePayment(data){
     }
 }
 
+async function cancelBooking(data){
+    const transaction = await db.sequelize.transaction();
+    try {
+        const bookingDetails = await bookingRepository.get_booking(data.bookingId, transaction);
+        if(bookingDetails.status == CANCELLED){
+            await transaction.commit();
+            return true; 
+        }
+        await axios.patch(`${serverPort.FLIGHT_SERVICE}/api/v1/flights/update-seat/${data.flightId}`, {seats: bookingDetails.noOfSeats, dec: 0});
+        await bookingRepository.update_booking(data.bookingId, {status:CANCELLED}, transaction);
+        await transaction.commit();
+        return true;
+
+    } catch (error) {
+        console.log(error);
+        
+        await transaction.rollback();
+        throw new ApiError(error.message || "Booking has not been cancelled", error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR);
+     }
+
+}
+
+// No need to call api for this....
+async function cancelOldBookings(){
+    try {
+
+        let time = new Date(Date.now() + 1000*5*60);
+        const resp = await bookingRepository.update_oldBooking(time);
+        return resp;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
 
 module.exports={
     createBooking,
-    makePayment
+    makePayment,
+    cancelBooking,
+    cancelOldBookings
 }
